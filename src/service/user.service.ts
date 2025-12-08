@@ -1,0 +1,41 @@
+import { Repository } from "typeorm";
+import { RoleEnum, User, UserProfile } from "../model/user";
+
+interface createUserPayload {
+  username: string;
+  email: string;
+  password: string;
+  role?: RoleEnum;
+  cars?: string[];
+  profile?: UserProfile;
+}
+interface IUserService {
+  userFindByEmail: (email: string) => Promise<User | null>;
+  userFindById: (id: number) => Promise<User | null>;
+  createUser: (payload: createUserPayload) => Promise<User>;
+}
+
+export class UserService implements IUserService {
+  constructor(private userRepository: Repository<User>) {
+    // default value
+  }
+  userFindByEmail(email: string) {
+    return this.userRepository.findOneBy({ email });
+  }
+  userFindById(id: number) {
+    return this.userRepository.findOneBy({ id });
+  }
+
+  async createUser(payload: createUserPayload) {
+    const newUser = this.userRepository.create({
+      email: payload.email,
+      password: payload.password,
+      role: payload.role,
+      username: payload.username,
+      cars: payload.cars,
+      profile: payload.profile,
+    });
+    const user = await this.userRepository.save(newUser);
+    return user;
+  }
+}
