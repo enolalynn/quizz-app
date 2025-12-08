@@ -5,23 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Generated,
+  OneToMany,
 } from "typeorm";
-
-export enum RoleEnum {
-  ADMIN = "admin",
-  USER = "user",
-  EDITOR = "editor",
-}
-
-export enum GenderEnum {
-  MALE = "male",
-  FEMALE = "female",
-  OTHER = "other",
-}
+import { Answer } from "./answer";
 
 export interface UserProfile {
   dateOfBirth: Date;
-  gender: GenderEnum;
   phone: string;
 }
 
@@ -29,10 +18,6 @@ export interface UserProfile {
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  @Generated("uuid")
-  uuid: string;
 
   @Column()
   username: string;
@@ -45,26 +30,8 @@ export class User {
   })
   email: string;
 
-  @Column({
-    default: RoleEnum.USER,
-    type: "enum",
-    enum: RoleEnum,
-  })
-  role: RoleEnum;
-
-  @Column({
-    name: "cars",
-    type: "simple-array",
-    default: [],
-  })
-  cars?: string[];
-
-  @Column({
-    name: "profile",
-    type: "simple-json",
-    nullable: true,
-  })
-  profile?: UserProfile;
+  @OneToMany(() => Answer, a => a.user)
+  answers: Answer[];
 
   @CreateDateColumn()
   createdAt: Date;

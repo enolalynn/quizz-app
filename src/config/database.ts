@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { User } from "../model/user";
+import { Question } from "../model/question";
+import { Answer } from "../model/answer";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -8,10 +10,10 @@ export const AppDataSource = new DataSource({
   port: 5433,
   username: "postgres",
   password: "admin",
-  database: "ts-project",
+  database: "quizz-app",
   synchronize: true,
   logging: false,
-  entities: [User],
+  entities: [User, Question, Answer],
   migrations: [],
   subscribers: [],
 });

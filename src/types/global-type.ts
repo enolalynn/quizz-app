@@ -1,9 +1,9 @@
-import { LoginPayload } from "./auth.type";
+import { LoginPayload, TokenPayload } from "./auth.type";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: LoginPayload;
+      user?: TokenPayload;
       loginTime?: number;
     }
   }

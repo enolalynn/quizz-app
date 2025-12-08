@@ -1,11 +1,13 @@
 import "reflect-metadata";
 import express, { Request, Response, NextFunction } from "express";
 import { json } from "body-parser";
-import { authenticate, authorize, generateToken } from "./middleware/auth";
+import { authenticate, authorize } from "./middleware/auth";
 import { AppDataSource } from "./config/database";
 import { userRepository } from "./repositories/user.repository";
 import "./types/global-type";
 import { UserService } from "./service/user.service";
+import authRouter from "./routes/auth.route";
+import { AppError } from "./error-codes/app.error";
 
 // Initialize Express app
 const app = express();
@@ -32,20 +34,7 @@ app.post("/api/register", async (req, res) => {
     .status(400);
 });
 
-app.post("/api/login", async (req, res) => {
-  const userService = new UserService(userRepository);
-  const user = await userService.userFindByEmail(req.body.email);
-  if (!user) return res.json({ message: `user not found` }).status(404);
-  if (user.password !== req.body.password) {
-    return res.json({ message: `incorrect password` }).status(401);
-  }
-  const token = generateToken({
-    email: user.email,
-    id: user.id,
-    role: user.role,
-  });
-  return res.json({ message: `login success`, token }).status(200);
-});
+app.use("/api/auth", authRouter);
 
 app.get(
   "/api/profile",
@@ -62,8 +51,19 @@ app.get(
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.message);
-  res.status(500).json({ message: "Something went wrong!" });
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      code: err.code,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    code: "INTERNAL_ERROR",
+  });
 });
 
 AppDataSource.initialize()

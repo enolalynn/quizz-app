@@ -1,19 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 import jwt from "jsonwebtoken";
-import { LoginPayload } from "../types/auth.type";
-
-export const generateToken = (user: LoginPayload): string => {
-  const token = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    },
-    "123"
-  );
-  return token;
-};
+import { LoginPayload, TokenPayload } from "../types/auth.type";
 
 export const authenticate = (
   req: Request,
@@ -27,7 +15,7 @@ export const authenticate = (
   }
 
   try {
-    const decoded = jwt.verify(token, "123") as LoginPayload;
+    const decoded = jwt.verify(token, "123") as TokenPayload;
     if (!decoded) {
       return res.status(401).json({ message: "Provided token is invalid" });
     }
@@ -45,7 +33,7 @@ export const authorize = (roles: string[]) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes("")) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
