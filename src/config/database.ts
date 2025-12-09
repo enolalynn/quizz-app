@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import { User } from "../model/user";
 import { Question } from "../model/question";
 import { Answer } from "../model/answer";
+import { OTP } from "../model/otp";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: "quizz-app",
   synchronize: true,
   logging: false,
-  entities: [User, Question, Answer],
+  entities: [User, Question, Answer, OTP],
   migrations: [],
   subscribers: [],
 });
