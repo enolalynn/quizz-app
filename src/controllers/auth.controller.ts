@@ -38,4 +38,17 @@ export class AuthController implements IAuthController {
       success: true,
     });
   };
+
+  register = async (req: Request, res: Response) => {
+  const userService = new UserService(userRepository);
+
+  const userExist = await userService.userFindByEmail(req.body.email);
+  if (userExist) return res.status(400).json({ message: `user already exist` });
+
+  const newUser = await userService.createUser(req.body);
+  return res.status(201).json({
+    message: `user create success`,
+    user: newUser
+  });
+};
 }

@@ -11,7 +11,7 @@ import { AppError } from "./error-codes/app.error";
 
 // Initialize Express app
 const app = express();
-const PORT = 5001;
+const PORT = 5002;
 
 // Middleware
 app.use(json());
@@ -21,18 +21,18 @@ app.get("/api/users", async (req, res) => {
   return res.json(users);
 });
 
-app.post("/api/register", async (req, res) => {
-  const userService = new UserService(userRepository);
+// app.post("/api/register", async (req, res) => {
+//   const userService = new UserService(userRepository);
 
-  const userExist = await userService.userFindByEmail(req.body.email);
-  if (userExist) return res.status(400).json({ message: `user already exist` });
-  const { username, email, password, role, cars, profile } = req.body;
+//   const userExist = await userService.userFindByEmail(req.body.email);
+//   if (userExist) return res.status(400).json({ message: `user already exist` });
+//   const { username, email, password, role, cars, profile } = req.body;
 
-  const newUser = await userService.createUser(req.body);
-  return res
-    .json({ message: `user create success`, user: newUser })
-    .status(400);
-});
+//   const newUser = await userService.createUser(req.body);
+//   return res
+//     .json({ message: `user create success`, user: newUser })
+//     .status(400);
+// });
 
 app.use("/api/auth", authRouter);
 
@@ -56,6 +56,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
       success: false,
       message: err.message,
       code: err.code,
+      errors: err.errors,
     });
   }
 
@@ -72,7 +73,7 @@ AppDataSource.initialize()
       console.log(`Server running on http://localhost:${PORT}`)
     );
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("DB init error", err);
     process.exit(1);
   });

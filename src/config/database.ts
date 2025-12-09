@@ -7,9 +7,9 @@ import { Answer } from "../model/answer";
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "localhost",
-  port: 5433,
+  port: 5432,
   username: "postgres",
-  password: "admin",
+  password: "Thek",
   database: "quizz-app",
   synchronize: true,
   logging: false,
