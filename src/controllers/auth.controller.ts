@@ -17,6 +17,17 @@ export interface IAuthController {
       }>
     >
   >;
+  profile: (
+    req: Request,
+    res: Response
+  ) => Promise<
+    Response<
+      ApiResponse<{
+        message: string;
+        user: User;
+      }>
+    >
+  >;
 }
 
 export class AuthController implements IAuthController {
@@ -36,6 +47,22 @@ export class AuthController implements IAuthController {
       },
       message: "login success",
       success: true,
+    });
+  };
+
+  profile = async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const userService = new UserService(userRepository);
+    const user = await userService.userFindById(userId!);
+    if (!user) return res.status(404).json({ Messsage: "user not found" });
+    return res.status(200).json({
+      message: "fetch success",
+      user: {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        password: user.password,
+      },
     });
   };
 }
