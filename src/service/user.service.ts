@@ -1,5 +1,5 @@
 import { Repository } from "typeorm";
-import { User, UserProfile } from "../model/user";
+import { User } from "../model/user";
 
 interface createUserPayload {
   username: string;

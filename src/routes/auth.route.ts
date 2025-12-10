@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
+import { OtpController } from "../controllers/otp.controller";
+
 import { authenticate, authorize } from "../middleware/auth";
 import { createUserValidator } from "../validators/auth.validator";
 const authRouter = Router();
 
 const authController = new AuthController();
+const otpController = new OtpController();
 
 authRouter.post("/login", authController.login);
 authRouter.get(
@@ -14,5 +17,6 @@ authRouter.get(
   authController.profile
 );
 authRouter.post("/register", createUserValidator, authController.register);
+authRouter.post("/forgotPassword", otpController.createOTP);
 
 export default authRouter;
