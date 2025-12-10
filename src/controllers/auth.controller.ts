@@ -5,7 +5,7 @@ import { userRepository } from "../repositories/user.repository";
 import { AuthService, IAuthService } from "../service/auth.service";
 import { ApiResponse, LoginPayload } from "../types/auth.type";
 import { User } from "../model/user";
-// alsdkjflkdsaflsdf
+
 export interface IAuthController {
   login: (
     req: Request,

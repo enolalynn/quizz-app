@@ -4,12 +4,7 @@ import { userRepository } from "./../repositories/user.repository";
 import { resetPasswordPayload } from "./../types/auth.type";
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../types/auth.type";
-import {
-  Email,
-  IOTPService,
-  OTPPayload,
-  OTPService,
-} from "../service/otp.service";
+import { Email, IOTPService, OTPService } from "../service/otp.service";
 import { OTP } from "../model/otp";
 import { otpRepository } from "../repositories/otp.repository";
 
