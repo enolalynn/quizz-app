@@ -1,5 +1,5 @@
 import { userRepository } from "./../repositories/user.repository";
-import { Repository } from "typeorm";
+import { Repository, UpdateResult } from "typeorm";
 import { User } from "../model/user";
 import { resetPasswordPayload } from "../types/auth.type";
 import { promises } from "dns";
@@ -15,7 +15,7 @@ interface createUserPayload {
 interface passwordPayload {
   email: string;
   newPassword: string;
-  oldPassword: string;
+  oldPassword?: string;
 }
 
 export interface IUserService {
@@ -46,14 +46,6 @@ export class UserService implements IUserService {
     const user = await this.userRepository.save(newUser);
     return user;
   }
-  // async changePassword(udpayload: updatePasswordPayload) {
-  //   const user = await this.userRepository.findOneBy({ email: udpayload.email });
-  //   if (!user) throw new Error("User email is incorrect");
-  //   if (user.password === udpayload.newPassword)
-  //     throw new Error("New password cannot be the same as the old password");
-  //   user.password = udpayload.newPassword;
-  //   return this.userRepository.save(user);
-  // }
 
   async comparePassword(oldPassword: string, newPassword: string) {
     const user = await this.userRepository.findOneBy({ password: oldPassword });
@@ -61,13 +53,19 @@ export class UserService implements IUserService {
 
     return this.userRepository.save(user);
   }
-
   async changePassword(udpayload: passwordPayload) {
-    const user = await this.userRepository.findOneBy({
-      email: udpayload.email,
+    const userToUpdate = await this.userRepository.findOne({
+      where: { email: udpayload.email },
     });
-    if (!user) throw new Error("User email is incorrect");
-    user.password = udpayload.newPassword;
-    return this.userRepository.save(user);
+
+    if (!userToUpdate) {
+      throw new Error("User not found after update");
+    }
+    userToUpdate.password = udpayload.newPassword;
+
+    console.log("User updated successfully!");
+    const update = await userRepository.save(userToUpdate);
+    console.log(update);
+    return update;
   }
 }

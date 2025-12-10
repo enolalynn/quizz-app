@@ -1,3 +1,4 @@
+import { resetPasswordPayload } from "./../types/auth.type";
 import { Repository } from "typeorm";
 import { OTP } from "../model/otp";
 import { UserService } from "./user.service";
@@ -35,18 +36,23 @@ export class OTPService extends UserService implements IOTPService {
     }
     function generateOTP() {
       const otp = Math.floor(100000 + Math.random() * 900000);
-      const min = Date.now() + 1 * 60 * 1000;
+      const min = Date.now() + 3 * 60 * 1000;
       const expireAt = new Date(min);
       return { otp, expireAt };
     }
     const otp = generateOTP();
 
-    const OTPcreate = this.otpRepository.create({
-      email: emailExist.email,
-      otp: otp.otp,
-      expiresAt: otp.expireAt,
-    });
-    return await this.otpRepository.save(OTPcreate);
+    const OTPcreate = await this.otpRepository.upsert(
+      {
+        email: emailExist.email,
+        otp: otp.otp,
+        expiresAt: otp.expireAt,
+        isUsed: false,
+      },
+      ["email"]
+    );
+
+    return await this.otpRepository.findOneByOrFail({ email: payload.email });
   }
 
   async checkOTPStatus(email: string) {

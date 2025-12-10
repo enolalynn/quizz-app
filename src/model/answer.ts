@@ -42,10 +42,10 @@ export class Answer {
   })
   score: number;
 
-  @ManyToOne(() => Question, question => question.answers)
+  @ManyToOne(() => Question, (question) => question.answers)
   question: Question;
 
-  @ManyToOne(() => User, user => user.answers)
+  @ManyToOne(() => User, (user) => user.answers)
   user: User;
 
   @CreateDateColumn()

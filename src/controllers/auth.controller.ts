@@ -80,71 +80,38 @@ export class AuthController implements IAuthController {
       user: newUser,
     });
   };
+  changePassword = async (req: Request, res: Response) => {
+    try {
+      const { email, oldPassword, newPassword } = req.body;
 
-  // updatePassword = async (req: Request, res: Response) => {
-  //   const userService = new UserService(userRepository);
-  //   const userExist = await userService.userFindByEmail(req.body.email);
-  //   if (!userExist) return res.status(400).json({ message: `user not found` });
-  //   if (userExist.password === req.body.newPassword)
-  //     return res
-  //       .status(400)
-  //       .json({ message: `New password cannot be the same as old password` });
-  //   const newPassword = await userService.changePassword({
-  //     email: req.body.email,
-  //     newPassword: req.body.newPassword,
-  //   });
-  //   userExist.password = newPassword.password;
-  //   return res.status(200).json({ message: "Password updated successfully" });
-  // };
+      if (!email || !oldPassword || !newPassword) {
+        return res
+          .status(400)
+          .json({ message: "email, oldPassword and newPassword are required" });
+      }
 
-  updatePassword = async (req: Request, res: Response) => {
-  try {
-    const { email, oldPassword, newPassword } = req.body;
+      const userService = new UserService(userRepository);
 
-    if (!email || !oldPassword || !newPassword) {
-      return res.status(400).json({ message: "email, oldPassword and newPassword are required" });
+      const userExist = await userService.userFindByEmail(req.body.email);
+      if (!userExist)
+        return res.status(400).json({ message: `user not found!` });
+
+      const equalpassword = await userService.comparePassword(
+        oldPassword,
+        userExist.password
+      );
+      if (!equalpassword) {
+        return res.status(400).json({ message: "Old password is incorrect" });
+      }
+
+      await userService.changePassword({ email, newPassword, oldPassword });
+
+      return res.status(200).json({
+        message: "Password updated successfully",
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-
-    const userService = new UserService(userRepository);
-
-   const userExist = await userService.userFindByEmail(req.body.email);
-    if (!userExist)
-      return res.status(400).json({ message: `user not found!` });
-
-    const equalpassword = await userService.comparePassword(oldPassword,userExist.password);
-    if (!equalpassword) {
-      return res.status(400).json({ message: "Old password is incorrect" });
-    }
-
-    await userService.changePassword({ email, newPassword, oldPassword });
-
-    return res.status(200).json({
-      message: "Password updated successfully"
-    });
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-
-  // resetPassword = async (req: Request,res:Response) => {
-  //   const {email,otp,newPassword} = req.body;
-
-  //   const isvalid = await this.optservice.verifyOtp(email,otp,newPassword);
-
-  //   if(!isvalid) {
-  //     return res.status(400).json({Message:"Invalid email or OTP"})
-  //   }
-
-  //   const userService  = new UserService(userRepository);
-  //   const user = await userService.userFindByEmail(email);
-
-  //   if (!user) return res.status(404).json({message:"user not found"});
-  //   user.password = newPassword;
-  //   await userRepository.save(user)
-
-  //   return res.status(200).json({message: "Password reset successful"});
-  // }
+  };
 }

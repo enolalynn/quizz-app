@@ -1,7 +1,11 @@
 //import { otpRepository, userRepository } from './../repositories/user.repository';
 import { AppError } from "../error-codes/app.error";
 import { User } from "../model/user";
-import { LoginPayload, resetPasswordPayload, TokenPayload } from "../types/auth.type";
+import {
+  LoginPayload,
+  resetPasswordPayload,
+  TokenPayload,
+} from "../types/auth.type";
 import { IUserService } from "./user.service";
 import jwt from "jsonwebtoken";
 
@@ -44,13 +48,4 @@ export class AuthService implements IAuthService {
     );
     return token;
   };
-
-  // async verifyOtp(email:string,otp:number,newPassword:string){
-  //   const record = await otpRepository.findOneBy ({email})
-
-  //   if (!record) return false;
-  //   if (record.isUsed) return false;
-
-  //   if (record)
-  // }
 }

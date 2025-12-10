@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
 import { OtpController } from "../controllers/otp.controller";
@@ -19,8 +18,8 @@ authRouter.get(
 );
 authRouter.post("/register", createUserValidator, authController.register);
 authRouter.post("/forgotPassword", otpController.createOTP);
+authRouter.put("/resetpassword", otpController.resetpassword); // email,otp,newpassword otp-> find => otp.isUsed === false -> password change -> otp update isUsed = true
 
-authRouter.put ('/update-password', authController.updatePassword);
-
+authRouter.put("/update-password", authController.changePassword);
 
 export default authRouter;
