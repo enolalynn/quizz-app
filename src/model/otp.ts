@@ -22,8 +22,11 @@ export class OTP {
   @Column("numeric")
   otp: number;
 
+  @Column()
+  expiresAt: Date;
+
   @Column({
-    type: "numeric",
+    type: "boolean",
     default: false,
   })
   isUsed: boolean;

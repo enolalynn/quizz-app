@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
 import { authenticate, authorize } from "../middleware/auth";
@@ -14,5 +15,8 @@ authRouter.get(
   authController.profile
 );
 authRouter.post("/register", createUserValidator, authController.register);
+
+authRouter.put ('/update-password', authController.updatePassword);
+
 
 export default authRouter;

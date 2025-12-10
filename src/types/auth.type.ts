@@ -13,3 +13,9 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
 }
+
+export interface resetPasswordPayload {
+  email: string;
+  otp: number;
+  newPassword: string;
+}

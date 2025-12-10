@@ -1,3 +1,4 @@
+import { OTP } from './../model/otp';
 // createUser.ts
 import { Request, Response, NextFunction } from "express";
 import { body, validationResult } from "express-validator";
@@ -32,10 +33,35 @@ export const createUserValidator = [
         "validation error",
         "AUTH_INVALID_USER",
         400,
-        errors.array()  
+        errors.array()
       );
     }
 
     next(); // continue to the real handler
   },
+];
+
+export const passwordValidator = [
+    body("OTP")
+    .notEmpty()
+    .withMessage("OTP is required!")
+    .isNumeric()
+    .withMessage("OTP must be numeric"),
+
+     body("newPassword")
+    .notEmpty()
+    .withMessage("Password is required")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
+
+    body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format"),
+
+     (req: Request, res: Response, next: NextFunction) => {
+
+     }
+
 ];

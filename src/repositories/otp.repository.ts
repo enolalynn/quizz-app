@@ -1,6 +1,5 @@
 import { validationResult } from 'express-validator';
 import { AppDataSource } from "../config/database";
-import { User } from "../model/user";
 import { OTP } from "../model/otp";
 
-export const userRepository = AppDataSource.getRepository(User);
+export const otpRepository = AppDataSource.getRepository(OTP);
