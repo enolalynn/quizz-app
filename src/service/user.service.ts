@@ -1,6 +1,6 @@
 import { userRepository } from "./../repositories/user.repository";
 import { Repository } from "typeorm";
-import { User, UserProfile } from "../model/user";
+import { User } from "../model/user";
 import { resetPasswordPayload } from "../types/auth.type";
 import { promises } from "dns";
 import { response } from "express";

@@ -1,27 +1,57 @@
 import { Repository } from "typeorm";
 import { OTP } from "../model/otp";
-import { otpRepository } from "../repositories/otp.repository";
+import { UserService } from "./user.service";
+import { User } from "../model/user";
+import { AppError } from "../error-codes/app.error";
+import { ErrorCodes } from "../error-codes/auth.error";
 
-export interface IOtpService {
-    createOtp(email: string): Promise<OTP>;
-    verifyOtp(email: string, otp: number): Promise<boolean>;
+export interface Email {
+  email: string;
 }
 
-export class OtpService {
+export interface OTPPayload {
+  email: Email;
+  otp: Number;
+  expireAt: Date;
+}
 
+export interface IOTPService {
+  createOTP: (payload: Email) => Promise<OTP>;
+  checkOTPStatus: (email: string) => Promise<OTP | null>;
+}
 
-async verifyOtp(email: string, otp: number) {
-    const record = await otpRepository.findOneBy({ email });
+export class OTPService extends UserService implements IOTPService {
+  constructor(
+    userRepository: Repository<User>,
+    private otpRepository: Repository<OTP>
+  ) {
+    super(userRepository);
+  }
 
-    if (!record) return false;
+  async createOTP(payload: Email): Promise<OTP> {
+    const emailExist = await this.userFindByEmail(payload.email);
+    if (!emailExist) {
+      throw new AppError("User not found", ErrorCodes.AUTH_INVALID_USER, 404);
+    }
+    function generateOTP() {
+      const otp = Math.floor(100000 + Math.random() * 900000);
+      const min = Date.now() + 1 * 60 * 1000;
+      const expireAt = new Date(min);
+      return { otp, expireAt };
+    }
+    const otp = generateOTP();
 
-    if (record.isUsed) return false;
+    const OTPcreate = this.otpRepository.create({
+      email: emailExist.email,
+      otp: otp.otp,
+      expiresAt: otp.expireAt,
+    });
+    return await this.otpRepository.save(OTPcreate);
+  }
 
-    if (record.otp !== otp) return false;
-
-    record.isUsed = true;
-    await otpRepository.save(record);
-
-    return true;
+  async checkOTPStatus(email: string) {
+    return this.otpRepository.findOneBy({
+      email,
+    });
   }
 }
