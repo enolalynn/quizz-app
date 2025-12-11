@@ -53,6 +53,7 @@ export class UserService implements IUserService {
 
     return this.userRepository.save(user);
   }
+
   async changePassword(udpayload: passwordPayload) {
     const userToUpdate = await this.userRepository.findOne({
       where: { email: udpayload.email },

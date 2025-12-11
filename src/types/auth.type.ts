@@ -19,3 +19,9 @@ export interface resetPasswordPayload {
   otp: number;
   newPassword: string;
 }
+
+export interface AdminRegisterPayload {
+  password: string;
+  email: string;
+  username: string;
+}

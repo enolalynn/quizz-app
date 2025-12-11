@@ -8,10 +8,11 @@ import "./types/global-type";
 import { UserService } from "./service/user.service";
 import authRouter from "./routes/auth.route";
 import { AppError } from "./error-codes/app.error";
+import "dotenv/config";
 
 // Initialize Express app
 const app = express();
-const PORT = 5002;
+const PORT = Number(process.env.SERVER_PORT) || 5002;
 
 // Middleware
 app.use(json());
@@ -58,7 +59,7 @@ AppDataSource.initialize()
       console.log(`Server running on http://localhost:${PORT}`)
     );
   })
-  .catch((err) => {
+  .catch(err => {
     console.error("DB init error", err);
     process.exit(1);
   });
