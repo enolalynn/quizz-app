@@ -1,15 +1,19 @@
 import { UserService } from "./../service/user.service";
-import { body } from "express-validator";
 import { Request, Response } from "express";
-import { userRepository } from "../repositories/user.repository";
+import {
+  adminRepository,
+  userRepository,
+} from "../repositories/user.repository";
 import { AuthService, IAuthService } from "../service/auth.service";
 import { ApiResponse, LoginPayload } from "../types/auth.type";
 import { User } from "../model/user";
+import { Admin } from "../model/admin";
+import { AppError } from "../error-codes/app.error";
 
 export interface IAuthController {
   login: (
     req: Request,
-    res: Response<ApiResponse<string>>
+    res: Response
   ) => Promise<
     Response<
       ApiResponse<{
@@ -29,13 +33,43 @@ export interface IAuthController {
       }>
     >
   >;
+
+  adminRegister: (
+    req: Request,
+    res: Response<ApiResponse<Admin>>
+  ) => Promise<Response<ApiResponse<Admin>>>;
+
+  adminLogin: (
+    req: Request,
+    res: Response<
+      ApiResponse<{
+        token: string;
+        admin: Admin;
+      }>
+    >
+  ) => Promise<
+    Response<
+      ApiResponse<{
+        token: string;
+        admin: Admin;
+      }>
+    >
+  >;
+
+  adminValidate: (
+    req: Request,
+    res: Response<ApiResponse<Admin>>
+  ) => Promise<Response<ApiResponse<Admin>>>;
 }
 
 export class AuthController implements IAuthController {
   private authService: IAuthService;
 
   constructor() {
-    this.authService = new AuthService(new UserService(userRepository));
+    this.authService = new AuthService(
+      new UserService(userRepository),
+      adminRepository
+    );
   }
   login = async (req: Request, res: Response) => {
     const payload: LoginPayload = req.body;
@@ -80,6 +114,7 @@ export class AuthController implements IAuthController {
       user: newUser,
     });
   };
+
   changePassword = async (req: Request, res: Response) => {
     try {
       const { email, oldPassword, newPassword } = req.body;
@@ -113,5 +148,59 @@ export class AuthController implements IAuthController {
       console.error(error);
       return res.status(500).json({ message: "Internal Server Error" });
     }
+  };
+
+  adminRegister = async (req: Request, res: Response<ApiResponse<Admin>>) => {
+    const adminExist = await this.authService.findAdminByEmail(req.body.email);
+
+    if (adminExist) {
+      throw new AppError(
+        "email already exist!",
+        "ADMIN_REGISTER_DUPLICATE",
+        400
+      );
+    }
+
+    const admin = await this.authService.adminRegister(req.body);
+    return res.status(201).json({
+      message: "admin register",
+      data: admin,
+      success: true,
+    });
+  };
+
+  adminLogin = async (
+    req: Request,
+    res: Response<
+      ApiResponse<{
+        token: string;
+        admin: Admin;
+      }>
+    >
+  ) => {
+    const payload: LoginPayload = req.body;
+    const loginData = await this.authService.adminLogin(payload);
+
+    return res.status(200).json({
+      data: {
+        admin: loginData.admin,
+        token: loginData.token,
+      },
+      message: "login success",
+      success: true,
+    });
+  };
+
+  adminValidate = async (req: Request, res: Response<ApiResponse<Admin>>) => {
+    const user = await this.authService.findAdminByEmail(req.user?.email!);
+    if (!user) {
+      throw new AppError("user not found", "AUTH_INVALID_USER", 401);
+    }
+
+    return res.status(200).json({
+      data: user,
+      message: "validate success",
+      success: true,
+    });
   };
 }

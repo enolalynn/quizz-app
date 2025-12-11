@@ -3,6 +3,7 @@ export const ErrorCodes = {
   AUTH_INVALID_USER: "AUTH_INVALID_USER",
   INTERNAL_ERROR: "INTERNAL_ERROR",
   ERROR_ONE: "ERROR_ONE",
+  ADMIN_REGISTER_DUPLICATE: "ADMIN_REGISTER_DUPLICATE",
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
