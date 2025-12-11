@@ -32,7 +32,7 @@ export class Question {
     enumName: "answer_type",
   })
   questionType: QuestionType;
-
+  // testing branch
   @Column({
     type: "simple-json",
   })
