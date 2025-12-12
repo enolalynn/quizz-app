@@ -14,10 +14,7 @@ export enum QuestionType {
   CHOICES = "choices",
 }
 
-export interface correctAnswer {
-  answer: string | boolean | string[];
-}
-
+export type correctAnswer = string | boolean | string[];
 @Entity("questions")
 export class Question {
   @PrimaryGeneratedColumn()
@@ -32,9 +29,11 @@ export class Question {
     enumName: "answer_type",
   })
   questionType: QuestionType;
+
   // testing branch
   @Column({
     type: "simple-json",
+    nullable: true,
   })
   correctAnswer: correctAnswer;
 
@@ -44,7 +43,7 @@ export class Question {
   })
   score: number;
 
-  @OneToMany(() => Answer, asnwer => asnwer.question)
+  @OneToMany(() => Answer, (asnwer) => asnwer.question)
   answers: Answer[];
 
   @CreateDateColumn()

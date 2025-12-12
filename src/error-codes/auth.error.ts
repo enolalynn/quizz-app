@@ -4,6 +4,7 @@ export const ErrorCodes = {
   INTERNAL_ERROR: "INTERNAL_ERROR",
   ERROR_ONE: "ERROR_ONE",
   ADMIN_REGISTER_DUPLICATE: "ADMIN_REGISTER_DUPLICATE",
+  QUESTION_INVALID_ID: "INVALID_QUESTION_ID",
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

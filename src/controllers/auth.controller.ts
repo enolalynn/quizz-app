@@ -152,7 +152,7 @@ export class AuthController implements IAuthController {
 
   adminRegister = async (req: Request, res: Response<ApiResponse<Admin>>) => {
     const adminExist = await this.authService.findAdminByEmail(req.body.email);
-
+    console.log(req.body);
     if (adminExist) {
       throw new AppError(
         "email already exist!",

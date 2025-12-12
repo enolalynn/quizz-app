@@ -46,6 +46,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
       errors: err.errors,
     });
   }
+  console.log(err);
   return res.status(500).json({
     success: false,
     message: "Internal server error",
@@ -59,7 +60,7 @@ AppDataSource.initialize()
       console.log(`Server running on http://localhost:${PORT}`)
     );
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("DB init error", err);
     process.exit(1);
   });
