@@ -30,6 +30,7 @@ export class Answer {
 
   @Column({
     type: "simple-json",
+    nullable: true,
   })
   answer: correctAnswer;
 
