@@ -5,6 +5,8 @@ export const ErrorCodes = {
   ERROR_ONE: "ERROR_ONE",
   ADMIN_REGISTER_DUPLICATE: "ADMIN_REGISTER_DUPLICATE",
   QUESTION_INVALID_ID: "INVALID_QUESTION_ID",
+  UNMATCH_WITH_QUESTIONTYPE: "UNMATCH_WITH_QUESTIONTYPE",
+  USER_NOT_FOUND: "USER_NOT_FOUND",
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

@@ -1,0 +1,251 @@
+import { DeleteResult, Repository } from "typeorm";
+import { Answer, answerType } from "../model/answer";
+import { CorrectAnswer, QuestionService } from "./question.service";
+import { Question } from "../model/question";
+import { AppError } from "../error-codes/app.error";
+
+export interface AnswerPayload {
+  answerType: answerType;
+  answer: CorrectAnswer;
+  questionId: number;
+}
+
+export interface IAnswerService {
+  createAnswer: (userId: number, payload: AnswerPayload) => Promise<Answer>;
+
+  getAllAnswers: () => Promise<Answer[]>;
+
+  getAllAnswersByUserId: (userId: number) => Promise<Answer[] | null>;
+
+  updateAnswer: (
+    userId: number,
+    ansId: number,
+    payload: AnswerPayload
+  ) => Promise<Answer>;
+
+  deleteAnswer: (userId: number, qId: number) => Promise<DeleteResult>;
+}
+export class AnswerService extends QuestionService implements IAnswerService {
+  constructor(
+    questionRepository: Repository<Question>,
+    private answerRepository: Repository<Answer>
+  ) {
+    super(questionRepository);
+  }
+
+  async createAnswer(userId: number, payload: AnswerPayload) {
+    const findQuestion = await this.getQuestionsById(payload.questionId);
+    console.log(findQuestion);
+    console.log("1: ", findQuestion.correctAnswer);
+    console.log("2: ", payload.answerType);
+    console.log("3: ", payload.answer);
+
+    if (!findQuestion.questionType.includes(payload.answerType)) {
+      throw new AppError(
+        "Answer type does not match with question type",
+        "UNMATCH_WITH_QUESTIONTYPE",
+        404
+      );
+    }
+    switch (payload.answerType) {
+      case "boolean":
+        if (typeof payload.answer !== typeof true) {
+          throw new AppError(
+            "Answer must be a boolean for BOOLEAN type",
+            "UNMATCH_WITH_QUESTIONTYPE",
+            400
+          );
+        }
+        break;
+      case "choices":
+        if (
+          !Array.isArray(payload.answer) ||
+          !payload.answer.every(
+            (ans) => typeof ans === "string" || typeof ans === "number"
+          )
+        ) {
+          throw new AppError(
+            "Answer must be an array for CHOICES type",
+            "UNMATCH_WITH_QUESTIONTYPE",
+            400
+          );
+        }
+        break;
+      case "blank":
+        if (typeof payload.answer !== "string") {
+          throw new AppError(
+            "Answer must be a string for BLANK type",
+            "UNMATCH_WITH_QUESTIONTYPE",
+            400
+          );
+        }
+        break;
+      default:
+        throw new AppError("Invalid answer type", "ERROR_ONE", 400);
+    }
+    let score = 0;
+    let isCorrect = false;
+
+    if (
+      payload.answerType === "choices" &&
+      Array.isArray(payload.answer) &&
+      Array.isArray(findQuestion.correctAnswer)
+    ) {
+      isCorrect =
+        payload.answer.length === findQuestion.correctAnswer.length &&
+        payload.answer.every(
+          (value, index) =>
+            value === (findQuestion.correctAnswer as (string | number)[])[index]
+        );
+      if (isCorrect === true) {
+        score = findQuestion.score;
+      } else {
+        score = 0;
+      }
+    }
+    if (findQuestion.correctAnswer === payload.answer) {
+      score = findQuestion.score;
+      isCorrect = true;
+    }
+    const answer = this.answerRepository.create({
+      question: {
+        id: payload.questionId,
+      },
+      user: {
+        id: userId,
+      },
+      answer: payload.answer,
+      answerType: payload.answerType,
+      isCorrect: isCorrect,
+      score: score,
+    });
+    console.log(answer);
+    return await this.answerRepository.save(answer);
+  }
+
+  async getAllAnswers() {
+    return this.answerRepository.find();
+  }
+
+  async getAllAnswersByUserId(userId: number) {
+    console.log("id : ", userId);
+    return await this.answerRepository.findBy({ user: { id: userId } });
+  }
+
+  async updateAnswer(userId: number, ansId: number, payload: AnswerPayload) {
+    console.log(userId, ansId, payload.questionId);
+    const check = await this.answerRepository.findOne({
+      where: { id: ansId, user: { id: userId } },
+    });
+
+    if (!check) {
+      throw new AppError(
+        "User did not ansewer for that question!",
+        "USER_NOT_FOUND",
+        404
+      );
+    }
+
+    const findQuestion = await this.getQuestionsById(payload.questionId);
+    if (!findQuestion.questionType.includes(payload.answerType)) {
+      throw new AppError(
+        "Answer type does not match with question type",
+        "UNMATCH_WITH_QUESTIONTYPE",
+        404
+      );
+    }
+    switch (payload.answerType) {
+      case "boolean":
+        if (typeof payload.answer !== typeof true) {
+          throw new AppError(
+            "Answer must be a boolean for BOOLEAN type",
+            "UNMATCH_WITH_QUESTIONTYPE",
+            400
+          );
+        }
+        break;
+      case "choices":
+        if (
+          !Array.isArray(payload.answer) ||
+          !payload.answer.every(
+            (ans) => typeof ans === "string" || typeof ans === "number"
+          )
+        ) {
+          throw new AppError(
+            "Answer must be an array for CHOICES type",
+            "UNMATCH_WITH_QUESTIONTYPE",
+            400
+          );
+        }
+        break;
+      case "blank":
+        if (typeof payload.answer !== "string") {
+          throw new AppError(
+            "Answer must be a string for BLANK type",
+            "UNMATCH_WITH_QUESTIONTYPE",
+            400
+          );
+        }
+      default:
+        throw new AppError("Invalid", "ERROR_ONE", 400);
+    }
+
+    let score = 0;
+    let isCorrect = false;
+
+    if (
+      payload.answerType === "choices" &&
+      Array.isArray(payload.answer) &&
+      Array.isArray(findQuestion.correctAnswer)
+    ) {
+      isCorrect =
+        payload.answer.length === findQuestion.correctAnswer.length &&
+        payload.answer.every(
+          (value, index) =>
+            value === (findQuestion.correctAnswer as (string | number)[])[index]
+        );
+      if (isCorrect === true) {
+        score = findQuestion.score;
+      } else {
+        score = 0;
+      }
+    }
+    if (findQuestion.correctAnswer === payload.answer) {
+      score = findQuestion.score;
+      isCorrect = true;
+    }
+
+    const updated = await this.answerRepository.preload({
+      id: ansId || check.id,
+      answer: payload.answer || check.answer,
+      answerType: payload.answerType || check.answerType,
+      question: { id: payload.questionId || check.question.id },
+      score: score,
+      isCorrect: isCorrect,
+    });
+    if (!updated) {
+      // very rare, but TS + runtime safe
+      throw new AppError("Answer not found", "ERROR_ONE", 404);
+    }
+
+    return await this.answerRepository.save(updated);
+  }
+
+  async deleteAnswer(userId: number, ansId: number) {
+    const findAnswer = await this.getAllAnswersByUserId(userId);
+    const a = findAnswer.filter((value) => value.id === ansId);
+    console.log("a : ", a);
+    if (a.length === 0) {
+      throw new AppError(
+        "Question ID is not found!",
+        "INVALID_QUESTION_ID",
+        404
+      );
+    }
+    const deleteAnswer = await this.answerRepository.delete({
+      user: { id: userId },
+      id: ansId,
+    });
+    return deleteAnswer;
+  }
+}

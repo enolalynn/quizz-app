@@ -5,11 +5,13 @@ import { OtpController } from "../controllers/otp.controller";
 import { adminAuthenticate, authenticate, authorize } from "../middleware/auth";
 import { createUserValidator } from "../validators/auth.validator";
 import { QuestionController } from "../controllers/question.controller";
+import { AnswerController } from "../controllers/answer.controller";
 const authRouter = Router();
 
 const authController = new AuthController();
 const otpController = new OtpController();
 const questionController = new QuestionController();
+const answerController = new AnswerController();
 
 authRouter.post("/login", authController.login);
 authRouter.get(
@@ -36,7 +38,14 @@ authRouter.get(
 
 authRouter.post("/question", questionController.createQuestion);
 authRouter.get("/questions", questionController.getAllQuestions);
+authRouter.get("/question/:id", questionController.getQuestionById);
 authRouter.put("/edit-question/:id", questionController.updateQuestion);
 authRouter.delete("/question/:id", questionController.deleteQuestion);
+
+authRouter.post("/answer", authenticate, answerController.createAnswer);
+authRouter.get("/answers", answerController.getAllAnswers);
+authRouter.get("/answers-by-user/:id", answerController.getAllAnswersByUserId);
+authRouter.put("/answer/:id", authenticate, answerController.updateAnswer);
+authRouter.delete("/answer/:id", authenticate, answerController.deleteAnswer);
 
 export default authRouter;

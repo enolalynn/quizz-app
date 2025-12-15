@@ -19,6 +19,7 @@ export interface IQestionService {
   createQuestion: (payload: QuestionPayload) => Promise<Question | Question[]>;
   updateQuestion: (id: number, payload: QuestionPayload) => Promise<Question>;
   getAllQuestions: () => Promise<Question[]>;
+  getQuestionsById: (id: number) => Promise<Question>;
   deleteQuestion: (id: number) => Promise<DeleteResult>;
 }
 export class QuestionService implements IQestionService {
@@ -48,6 +49,15 @@ export class QuestionService implements IQestionService {
 
   async getAllQuestions() {
     return await this.questionRepository.find();
+  }
+
+  async getQuestionsById(id: number) {
+    const findId = await this.questionRepository.findOneBy({ id: id });
+    console.log(findId);
+    if (!findId) {
+      throw new AppError("ID not found", "INVALID_QUESTION_ID", 404);
+    }
+    return findId;
   }
 
   async deleteQuestion(id: number) {

@@ -21,6 +21,10 @@ export interface IQuestionController {
     req: Request,
     res: Response
   ) => Promise<Response<ApiResponse<Question[]>>>;
+  getQuestionById: (
+    req: Request,
+    res: Response
+  ) => Promise<Response<ApiResponse<Question[]>>>;
 
   updateQuestion: (
     req: Request,
@@ -78,6 +82,15 @@ export class QuestionController implements IQuestionController {
     return res.status(200).json({
       message: "Here..!",
       data: questions,
+    });
+  };
+
+  getQuestionById = async (req: Request, res: Response) => {
+    const qid = req.params.id;
+    const questionById = await this.questionService.getQuestionsById(+qid);
+    return res.status(200).json({
+      message: "Here is your Question",
+      data: questionById,
     });
   };
 
