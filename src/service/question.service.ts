@@ -61,6 +61,15 @@ export class QuestionService implements IQestionService {
   }
 
   async deleteQuestion(id: number) {
+    const findQuestion = await this.questionRepository.findBy({ id });
+    const a = findQuestion.filter((value) => value.id === id);
+    if (a.length === 0) {
+      throw new AppError(
+        "Question ID is not found!",
+        "INVALID_QUESTION_ID",
+        404
+      );
+    }
     return await this.questionRepository.delete({ id: id });
   }
 }
