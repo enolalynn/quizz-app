@@ -36,12 +36,14 @@ authRouter.get(
   authController.adminValidate
 );
 
+//QUESTION
 authRouter.post("/question", questionController.createQuestion);
 authRouter.get("/questions", questionController.getAllQuestions);
 authRouter.get("/question/:id", questionController.getQuestionById);
 authRouter.put("/edit-question/:id", questionController.updateQuestion);
 authRouter.delete("/question/:id", questionController.deleteQuestion);
 
+//ANSWER
 authRouter.post("/answer", authenticate, answerController.createAnswer);
 authRouter.get("/answers", answerController.getAllAnswers);
 authRouter.get("/answers-by-user/:id", answerController.getAllAnswersByUserId);

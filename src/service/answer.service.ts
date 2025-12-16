@@ -35,10 +35,6 @@ export class AnswerService extends QuestionService implements IAnswerService {
 
   async createAnswer(userId: number, payload: AnswerPayload) {
     const findQuestion = await this.getQuestionsById(payload.questionId);
-    console.log(findQuestion);
-    console.log("1: ", findQuestion.correctAnswer);
-    console.log("2: ", payload.answerType);
-    console.log("3: ", payload.answer);
 
     if (!findQuestion.questionType.includes(payload.answerType)) {
       throw new AppError(
@@ -133,28 +129,56 @@ export class AnswerService extends QuestionService implements IAnswerService {
   }
 
   async updateAnswer(userId: number, ansId: number, payload: AnswerPayload) {
-    console.log(userId, ansId, payload.questionId);
+    //if user want to change existing question  => answerType need in payload
+    //else only want to update existing answer => answerType would be optional
+
     const check = await this.answerRepository.findOne({
       where: { id: ansId, user: { id: userId } },
+      relations: {
+        question: true,
+      },
     });
 
     if (!check) {
       throw new AppError(
-        "User did not ansewer for that question!",
+        "User did not answer for that question!",
         "USER_NOT_FOUND",
         404
       );
     }
+    console.log("q id : ", payload.questionId);
+    console.log(payload.answerType);
 
-    const findQuestion = await this.getQuestionsById(payload.questionId);
-    if (!findQuestion.questionType.includes(payload.answerType)) {
-      throw new AppError(
-        "Answer type does not match with question type",
-        "UNMATCH_WITH_QUESTIONTYPE",
-        404
-      );
+    let targetQuestion = check.question;
+
+    const questionChanged = check.question.id !== payload.questionId;
+    if (questionChanged) {
+      if (!payload.answerType) {
+        throw new AppError(
+          "Require answerType for changing question!",
+          "UNMATCH_WITH_QUESTIONTYPE",
+          404
+        );
+      }
+
+      const findQuestion = await this.getQuestionsById(payload.questionId);
+      targetQuestion = findQuestion;
+
+      const invalidAnswerType =
+        findQuestion.questionType.toString() !== payload.answerType.toString();
+
+      if (invalidAnswerType) {
+        throw new AppError(
+          "Answer type does not match with changed question!",
+          "UNMATCH_WITH_QUESTIONTYPE",
+          404
+        );
+      }
     }
-    switch (payload.answerType) {
+
+    const answerType = payload.answerType || check.answerType;
+
+    switch (answerType) {
       case "boolean":
         if (typeof payload.answer !== typeof true) {
           throw new AppError(
@@ -186,6 +210,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
             400
           );
         }
+        break;
       default:
         throw new AppError("Invalid", "ERROR_ONE", 400);
     }
@@ -194,24 +219,25 @@ export class AnswerService extends QuestionService implements IAnswerService {
     let isCorrect = false;
 
     if (
-      payload.answerType === "choices" &&
+      (check.answerType || payload.answerType) === "choices" &&
       Array.isArray(payload.answer) &&
-      Array.isArray(findQuestion.correctAnswer)
+      Array.isArray(targetQuestion.correctAnswer)
     ) {
       isCorrect =
-        payload.answer.length === findQuestion.correctAnswer.length &&
+        payload.answer.length === targetQuestion.correctAnswer.length &&
         payload.answer.every(
           (value, index) =>
-            value === (findQuestion.correctAnswer as (string | number)[])[index]
+            value ===
+            (targetQuestion.correctAnswer as (string | number)[])[index]
         );
       if (isCorrect === true) {
-        score = findQuestion.score;
+        score = targetQuestion.score;
       } else {
         score = 0;
       }
     }
-    if (findQuestion.correctAnswer === payload.answer) {
-      score = findQuestion.score;
+    if (targetQuestion.correctAnswer === payload.answer) {
+      score = targetQuestion.score;
       isCorrect = true;
     }
 
@@ -223,8 +249,8 @@ export class AnswerService extends QuestionService implements IAnswerService {
       score: score,
       isCorrect: isCorrect,
     });
+
     if (!updated) {
-      // very rare, but TS + runtime safe
       throw new AppError("Answer not found", "ERROR_ONE", 404);
     }
 

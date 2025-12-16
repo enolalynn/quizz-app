@@ -69,15 +69,31 @@ export class AnswerController implements IAnswerController {
     const userId = +req.params.id;
     console.log("userId: ", userId);
     const answers = await this.answerService.getAllAnswersByUserId(userId);
+    console.log(answers?.length);
+    if (answers?.length === 0) {
+      return res.status(200).json({
+        message: `No answer from user id: ${userId}!`,
+        data: answers,
+      });
+    }
     return res.status(200).json({
-      message: `All answers by user!`,
+      message: `All answers from user id: ${userId}!`,
       data: answers,
     });
   };
+
   updateAnswer = async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const ansId = +req.params.id;
     const payload: AnswerPayload = req.body;
+    console.log("user : ", userId, "ansId: ", ansId, "pl : ", payload);
+
+    if (payload.questionId === undefined) {
+      return res.status(404).json({
+        message: `Missing question Id!`,
+        data: null,
+      });
+    }
     const updateAns = await this.answerService.updateAnswer(
       userId!,
       ansId,
