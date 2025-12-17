@@ -7,10 +7,10 @@ import {
   QuestionPayload,
   QuestionType,
 } from "../service/question.service";
-import { AppError } from "../error-codes/app.error";
 import { ApiResponse } from "../types/auth.type";
-import { isArrayBuffer } from "util/types";
 import { DeleteResult } from "typeorm";
+import { AppError } from "../error-codes/app.error";
+
 export interface IQuestionController {
   createQuestion: (
     req: Request,
@@ -21,7 +21,7 @@ export interface IQuestionController {
     req: Request,
     res: Response
   ) => Promise<Response<ApiResponse<Question[]>>>;
-  getQuestionById: (
+  getQuestionsById: (
     req: Request,
     res: Response
   ) => Promise<Response<ApiResponse<Question[]>>>;
@@ -41,33 +41,22 @@ export class QuestionController implements IQuestionController {
   constructor() {
     this.questionService = new QuestionService(questionRepository);
   }
+
   createQuestion = async (req: Request, res: Response) => {
     const payload: QuestionPayload = req.body;
     console.log(payload);
-    switch (payload.questionType) {
-      case "boolean":
-        if (typeof payload.correctAnswer !== typeof true) {
-          return res.json({
-            messsage: "correctAnswer must be a boolean for BOOLEAN type",
-          });
-        }
-        break;
-      case "choices":
-        if (
-          !Array.isArray(payload.correctAnswer) ||
-          !payload.correctAnswer.every(
-            (ans) => typeof ans === "string" || typeof ans === "number"
-          )
-        ) {
-          return res.json({
-            messsage: "correctAnswer must be an array for CHOICES type",
-          });
-        }
-        break;
-      default:
-        res.json({
-          messsage: "correctAnswer must be a string for BLANK type",
-        });
+    if (
+      !payload.correctAnswer ||
+      !payload.questionType ||
+      !payload.rank ||
+      !payload.score ||
+      !payload.title
+    ) {
+      throw new AppError(
+        "Please, fully provide required field ",
+        "ERROR_ONE",
+        409
+      );
     }
 
     const question = await this.questionService.createQuestion(payload);
@@ -80,52 +69,25 @@ export class QuestionController implements IQuestionController {
   getAllQuestions = async (req: Request, res: Response) => {
     const questions = await this.questionService.getAllQuestions();
     return res.status(200).json({
-      message: "Here..!",
+      message: `All Questions (Total - ${questions.length})`,
       data: questions,
     });
   };
 
-  getQuestionById = async (req: Request, res: Response) => {
-    const qid = req.params.id;
-    const questionById = await this.questionService.getQuestionsById(+qid);
+  getQuestionsById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const questionById = await this.questionService.getQuestionsById(+id);
     return res.status(200).json({
-      message: "Here is your Question",
+      message: `Get Question Rank ${questionById.rank} by question ID`,
       data: questionById,
     });
   };
 
   updateQuestion = async (req: Request, res: Response) => {
-    const id = req.params.id;
+    const rank = req.params.id;
     const payload: QuestionPayload = req.body;
 
-    const update = await this.questionService.updateQuestion(+id, payload);
-
-    switch (update.questionType) {
-      case "boolean":
-        if (typeof update.correctAnswer !== typeof true) {
-          return res.json({
-            messsage: "correctAnswer must be a boolean for BOOLEAN type",
-          });
-        }
-        break;
-      case "choices":
-        if (
-          !Array.isArray(update.correctAnswer) ||
-          !update.correctAnswer.every(
-            (ans) => typeof ans === "string" || typeof ans === "number"
-          )
-        ) {
-          return res.json({
-            messsage: "correctAnswer must be an array for CHOICES type",
-          });
-        }
-        break;
-      default:
-        res.json({
-          messsage: "correctAnswer must be a string for BLANK type",
-        });
-    }
-
+    const update = await this.questionService.updateQuestion(+rank, payload);
     return res.status(200).json({
       message: "Update success!",
       data: update,

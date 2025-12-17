@@ -43,6 +43,13 @@ export class Question {
   })
   score: number;
 
+  @Column({
+    nullable: false,
+    type: "numeric",
+    unique: true,
+  })
+  rank: number;
+
   @OneToMany(() => Answer, (asnwer) => asnwer.question)
   answers: Answer[];
 

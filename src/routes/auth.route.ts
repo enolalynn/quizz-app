@@ -39,15 +39,22 @@ authRouter.get(
 //QUESTION
 authRouter.post("/question", questionController.createQuestion);
 authRouter.get("/questions", questionController.getAllQuestions);
-authRouter.get("/question/:id", questionController.getQuestionById);
+authRouter.get("/question/:id", questionController.getQuestionsById);
 authRouter.put("/edit-question/:id", questionController.updateQuestion);
 authRouter.delete("/question/:id", questionController.deleteQuestion);
 
 //ANSWER
-authRouter.post("/answer", authenticate, answerController.createAnswer);
+// authRouter.post("/answer", authenticate, answerController.createAnswer);
 authRouter.get("/answers", answerController.getAllAnswers);
 authRouter.get("/answers-by-user/:id", answerController.getAllAnswersByUserId);
 authRouter.put("/answer/:id", authenticate, answerController.updateAnswer);
 authRouter.delete("/answer/:id", authenticate, answerController.deleteAnswer);
+
+authRouter.get("/quizz", authenticate, answerController.getQuizzForAnswer);
+authRouter.post(
+  "/quizz/answer",
+  authenticate,
+  answerController.createAnswerForQuizz
+);
 
 export default authRouter;

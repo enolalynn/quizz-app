@@ -10,13 +10,19 @@ import {
   answerRepository,
   questionRepository,
 } from "../repositories/user.repository";
-import { DeleteResult } from "typeorm";
+import { DeleteResult, Repository } from "typeorm";
+import { Question } from "../model/question";
 
 export interface IAnswerController {
-  createAnswer: (
+  createAnswerForQuizz: (
     req: Request,
     res: Response
   ) => Promise<Response<ApiResponse<Answer>>>;
+
+  getQuizzForAnswer: (
+    req: Request,
+    res: Response
+  ) => Promise<Response<ApiResponse<Question>>>;
 
   getAllAnswers: (
     req: Request,
@@ -47,13 +53,41 @@ export class AnswerController implements IAnswerController {
     );
   }
 
-  createAnswer = async (req: Request, res: Response) => {
+  createAnswerForQuizz = async (req: Request, res: Response) => {
     const userId = req.user?.id!;
     const payload: AnswerPayload = req.body;
-    const answer = await this.answerService.createAnswer(userId, payload);
+    const answer = await this.answerService.createAnswerForQuizz(
+      userId,
+      payload
+    );
+    console.log(answer);
     return res.status(200).json({
-      message: "Create answer successfully!",
+      message: `Create answer for question no.${answer.question.rank} !`,
       data: answer,
+    });
+  };
+
+  // createAnswerForQuizz = async (req: Request, res: Response) => {
+  //   const userId = req.user?.id!;
+  //   const payload: AnswerPayload = req.body;
+  //   const answer = await this.answerService.createAnswerForQuizz(
+  //     userId,
+  //     payload
+  //   );
+
+  //   return res.status(200).json({
+  //     message: `Answered for question no. ${answer.question.rank}!`,
+  //     data: answer,
+  //   });
+  // };
+
+  getQuizzForAnswer = async (req: Request, res: Response) => {
+    const userId = req.user?.id!;
+    // const question = await this.getQuizzForAnswer(userId);
+    const showQuestion = await this.answerService.getQuizzForAnswer(userId);
+    return res.status(200).json({
+      message: "Next question....",
+      data: showQuestion,
     });
   };
 

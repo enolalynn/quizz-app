@@ -11,7 +11,12 @@ export interface AnswerPayload {
 }
 
 export interface IAnswerService {
-  createAnswer: (userId: number, payload: AnswerPayload) => Promise<Answer>;
+  createAnswerForQuizz: (
+    userId: number,
+    payload: AnswerPayload
+  ) => Promise<Answer>;
+
+  getQuizzForAnswer: (userId: number) => Promise<Question | null>;
 
   getAllAnswers: () => Promise<Answer[]>;
 
@@ -25,6 +30,7 @@ export interface IAnswerService {
 
   deleteAnswer: (userId: number, qId: number) => Promise<DeleteResult>;
 }
+
 export class AnswerService extends QuestionService implements IAnswerService {
   constructor(
     questionRepository: Repository<Question>,
@@ -33,9 +39,23 @@ export class AnswerService extends QuestionService implements IAnswerService {
     super(questionRepository);
   }
 
-  async createAnswer(userId: number, payload: AnswerPayload) {
+  async createAnswerForQuizz(userId: number, payload: AnswerPayload) {
+    const findAnswered = await this.getAllAnswersByUserId(userId);
+    const findQID = findAnswered.map((item) => item.question.id);
+    const isDuplicate = findQID.includes(payload.questionId);
+
+    if (isDuplicate) {
+      throw new AppError(
+        "This question is already answered!",
+        "DUPLICATE",
+        400
+      );
+    }
     const findQuestion = await this.getQuestionsById(payload.questionId);
 
+    if (!findQuestion) {
+      throw new AppError("Question not found!", "ERROR_ONE", 404);
+    }
     if (!findQuestion.questionType.includes(payload.answerType)) {
       throw new AppError(
         "Answer type does not match with question type",
@@ -119,13 +139,73 @@ export class AnswerService extends QuestionService implements IAnswerService {
     return await this.answerRepository.save(answer);
   }
 
+  async getQuizzForAnswer(userId: number) {
+    const rank = await this.getCurrentRank(userId);
+
+    const question = await this.getSingleAnswerByRank(Number(rank) + 1);
+
+    if (question === null) {
+      throw new AppError(
+        "Great job finishing all questions!",
+        "ERROR_ONE",
+        400
+      );
+    }
+
+    // const findId = question.map((item) => item.id);
+    // console.log(findId.sort());
+
+    // //SHOWING TOTAL SCORE WOULD BE BETTER (COMING SOON....!)
+    // if (answered.length === question.length) {
+    //   throw new AppError(
+    //     "Great job finishing all questions!",
+    //     "ERROR_ONE",
+    //     400
+    //   );
+    // }
+    // if (answered.length > 0) {
+    //   return await this.getQuestionsById(answered.length + 1);
+    // }
+    return question; //need to fix array type later
+  }
+
   async getAllAnswers() {
     return this.answerRepository.find();
   }
 
   async getAllAnswersByUserId(userId: number) {
     console.log("id : ", userId);
-    return await this.answerRepository.findBy({ user: { id: userId } });
+    return await this.answerRepository.find({
+      where: {
+        user: { id: userId },
+      },
+      order: {
+        question: {
+          rank: "asc",
+        },
+      },
+      relations: {
+        question: true,
+      },
+    });
+  }
+
+  async getCurrentRank(userId: number) {
+    return await this.answerRepository
+      .findOne({
+        where: {
+          user: { id: userId },
+        },
+        order: {
+          question: {
+            rank: "desc",
+          },
+        },
+        relations: {
+          question: true,
+        },
+      })
+      .then((data) => data?.question.rank || 0);
   }
 
   async updateAnswer(userId: number, ansId: number, payload: AnswerPayload) {
@@ -163,7 +243,6 @@ export class AnswerService extends QuestionService implements IAnswerService {
 
       const findQuestion = await this.getQuestionsById(payload.questionId);
       targetQuestion = findQuestion;
-
       const invalidAnswerType =
         findQuestion.questionType.toString() !== payload.answerType.toString();
 

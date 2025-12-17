@@ -7,6 +7,7 @@ export const ErrorCodes = {
   QUESTION_INVALID_ID: "INVALID_QUESTION_ID",
   UNMATCH_WITH_QUESTIONTYPE: "UNMATCH_WITH_QUESTIONTYPE",
   USER_NOT_FOUND: "USER_NOT_FOUND",
+  DUPLICATE: "DUPLICATE",
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
