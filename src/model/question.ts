@@ -39,13 +39,13 @@ export class Question {
 
   @Column({
     default: 0,
-    type: "numeric",
+    type: "int",
   })
   score: number;
 
   @Column({
     nullable: false,
-    type: "numeric",
+    type: "int",
     unique: true,
   })
   rank: number;

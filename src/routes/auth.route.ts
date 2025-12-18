@@ -47,6 +47,7 @@ authRouter.delete("/question/:id", questionController.deleteQuestion);
 // authRouter.post("/answer", authenticate, answerController.createAnswer);
 authRouter.get("/answers", answerController.getAllAnswers);
 authRouter.get("/answers-by-user/:id", answerController.getAllAnswersByUserId);
+authRouter.get("/result", authenticate, answerController.getResultByUserId);
 authRouter.put("/answer/:id", authenticate, answerController.updateAnswer);
 authRouter.delete("/answer/:id", authenticate, answerController.deleteAnswer);
 

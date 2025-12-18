@@ -22,6 +22,11 @@ export interface IAnswerService {
 
   getAllAnswersByUserId: (userId: number) => Promise<Answer[] | null>;
 
+  getResultByUserId: (userId: number) => Promise<{
+    user: [Answer[], number];
+    result: number | null;
+  } | null>;
+
   updateAnswer: (
     userId: number,
     ansId: number,
@@ -59,7 +64,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
     if (!findQuestion.questionType.includes(payload.answerType)) {
       throw new AppError(
         "Answer type does not match with question type",
-        "UNMATCH_WITH_QUESTIONTYPE",
+        "UNMATCH",
         404
       );
     }
@@ -68,7 +73,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         if (typeof payload.answer !== typeof true) {
           throw new AppError(
             "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -82,7 +87,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         ) {
           throw new AppError(
             "Answer must be an array for CHOICES type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -91,7 +96,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         if (typeof payload.answer !== "string") {
           throw new AppError(
             "Answer must be a string for BLANK type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -135,7 +140,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
       isCorrect: isCorrect,
       score: score,
     });
-    console.log(answer);
+
     return await this.answerRepository.save(answer);
   }
 
@@ -146,27 +151,13 @@ export class AnswerService extends QuestionService implements IAnswerService {
 
     if (question === null) {
       throw new AppError(
-        "Great job finishing all questions!",
+        "Great job! You completed all questions.",
         "ERROR_ONE",
         400
       );
     }
 
-    // const findId = question.map((item) => item.id);
-    // console.log(findId.sort());
-
-    // //SHOWING TOTAL SCORE WOULD BE BETTER (COMING SOON....!)
-    // if (answered.length === question.length) {
-    //   throw new AppError(
-    //     "Great job finishing all questions!",
-    //     "ERROR_ONE",
-    //     400
-    //   );
-    // }
-    // if (answered.length > 0) {
-    //   return await this.getQuestionsById(answered.length + 1);
-    // }
-    return question; //need to fix array type later
+    return question;
   }
 
   async getAllAnswers() {
@@ -174,7 +165,6 @@ export class AnswerService extends QuestionService implements IAnswerService {
   }
 
   async getAllAnswersByUserId(userId: number) {
-    console.log("id : ", userId);
     return await this.answerRepository.find({
       where: {
         user: { id: userId },
@@ -188,6 +178,33 @@ export class AnswerService extends QuestionService implements IAnswerService {
         question: true,
       },
     });
+  }
+
+  async getResultByUserId(userId: number) {
+    const userAnswered = await this.answerRepository.findAndCount({
+      where: {
+        user: { id: userId },
+      },
+      order: {
+        question: {
+          rank: "asc",
+        },
+      },
+      relations: {
+        question: true,
+      },
+    });
+
+    const totalScore = await this.answerRepository.sum("score", {
+      user: { id: userId },
+    });
+
+    const finalResult = {
+      user: userAnswered,
+      result: totalScore,
+    };
+
+    return finalResult;
   }
 
   async getCurrentRank(userId: number) {
@@ -209,7 +226,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
   }
 
   async updateAnswer(userId: number, ansId: number, payload: AnswerPayload) {
-    //if user want to change existing question  => answerType need in payload
+    //if user want to change existing question  => need answerType in payload
     //else only want to update existing answer => answerType would be optional
 
     const check = await this.answerRepository.findOne({
@@ -222,7 +239,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
     if (!check) {
       throw new AppError(
         "User did not answer for that question!",
-        "USER_NOT_FOUND",
+        "NOT_FOUND",
         404
       );
     }
@@ -236,7 +253,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
       if (!payload.answerType) {
         throw new AppError(
           "Require answerType for changing question!",
-          "UNMATCH_WITH_QUESTIONTYPE",
+          "UNMATCH",
           404
         );
       }
@@ -249,7 +266,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
       if (invalidAnswerType) {
         throw new AppError(
           "Answer type does not match with changed question!",
-          "UNMATCH_WITH_QUESTIONTYPE",
+          "UNMATCH",
           404
         );
       }
@@ -262,7 +279,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         if (typeof payload.answer !== typeof true) {
           throw new AppError(
             "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -276,7 +293,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         ) {
           throw new AppError(
             "Answer must be an array for CHOICES type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -285,7 +302,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         if (typeof payload.answer !== "string") {
           throw new AppError(
             "Answer must be a string for BLANK type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -341,11 +358,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
     const a = findAnswer.filter((value) => value.id === ansId);
     console.log("a : ", a);
     if (a.length === 0) {
-      throw new AppError(
-        "Question ID is not found!",
-        "INVALID_QUESTION_ID",
-        404
-      );
+      throw new AppError("Question ID is not found!", "NOT_FOUND", 404);
     }
     const deleteAnswer = await this.answerRepository.delete({
       user: { id: userId },

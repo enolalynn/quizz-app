@@ -39,7 +39,7 @@ export class Answer {
 
   @Column({
     default: 0,
-    type: "numeric",
+    type: "int",
   })
   score: number;
 

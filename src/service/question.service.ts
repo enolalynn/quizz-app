@@ -36,6 +36,7 @@ export class QuestionService implements IQestionService {
     ) {
       throw new AppError("Need to fill required fields. ", "ERROR_ONE", 400);
     }
+
     const find = await this.questionRepository.findOneBy({
       rank: payload.rank,
     });
@@ -49,7 +50,7 @@ export class QuestionService implements IQestionService {
         if (typeof payload.correctAnswer !== typeof true) {
           throw new AppError(
             "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -63,7 +64,7 @@ export class QuestionService implements IQestionService {
         ) {
           throw new AppError(
             "Answer must be an array for CHOICES type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -72,7 +73,7 @@ export class QuestionService implements IQestionService {
         if (typeof payload.correctAnswer !== "string") {
           throw new AppError(
             "Answer must be a string for BLANK type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -91,14 +92,14 @@ export class QuestionService implements IQestionService {
     });
     console.log(updated);
     if (!updated) {
-      throw new AppError("Question is not found", "INVALID_QUESTION_ID", 404);
+      throw new AppError("Question is not found", "NOT_FOUND", 404);
     }
 
     if (payload.questionType !== undefined) {
       if (payload.correctAnswer === undefined) {
         throw new AppError(
           "Require correctAnswer for changing question!",
-          "UNMATCH_WITH_QUESTIONTYPE",
+          "UNMATCH",
           404
         );
       } else {
@@ -107,7 +108,7 @@ export class QuestionService implements IQestionService {
             if (typeof payload.correctAnswer !== typeof true) {
               throw new AppError(
                 "Answer must be a boolean for BOOLEAN type",
-                "UNMATCH_WITH_QUESTIONTYPE",
+                "UNMATCH",
                 400
               );
             }
@@ -121,7 +122,7 @@ export class QuestionService implements IQestionService {
             ) {
               throw new AppError(
                 "Answer must be an array for CHOICES type",
-                "UNMATCH_WITH_QUESTIONTYPE",
+                "UNMATCH",
                 400
               );
             }
@@ -130,7 +131,7 @@ export class QuestionService implements IQestionService {
             if (typeof payload.correctAnswer !== "string") {
               throw new AppError(
                 "Answer must be a string for BLANK type",
-                "UNMATCH_WITH_QUESTIONTYPE",
+                "UNMATCH",
                 400
               );
             }
@@ -152,7 +153,7 @@ export class QuestionService implements IQestionService {
         if (typeof correctAnswer !== typeof true) {
           throw new AppError(
             "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -166,7 +167,7 @@ export class QuestionService implements IQestionService {
         ) {
           throw new AppError(
             "Answer must be an array for CHOICES type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -175,7 +176,7 @@ export class QuestionService implements IQestionService {
         if (typeof correctAnswer !== "string") {
           throw new AppError(
             "Answer must be a string for BLANK type",
-            "UNMATCH_WITH_QUESTIONTYPE",
+            "UNMATCH",
             400
           );
         }
@@ -188,12 +189,17 @@ export class QuestionService implements IQestionService {
     updated.questionType = payload.questionType || updated.questionType;
     updated.correctAnswer = payload.correctAnswer || updated.correctAnswer;
     updated.score = payload.score || updated.score;
+    updated.rank = payload.rank || updated.rank;
 
     return await this.questionRepository.save(updated);
   }
 
   async getAllQuestions() {
-    return await this.questionRepository.find();
+    return await this.questionRepository.find({
+      order: {
+        rank: "ASC",
+      },
+    });
   }
 
   async getSingleAnswerByRank(rank: number) {
@@ -204,7 +210,7 @@ export class QuestionService implements IQestionService {
     const question = await this.questionRepository.findOneBy({ id: id });
     console.log(question);
     if (!question) {
-      throw new AppError("ID not found", "INVALID_QUESTION_ID", 404);
+      throw new AppError("ID not found", "NOT_FOUND", 404);
     }
     return question;
   }
@@ -213,11 +219,7 @@ export class QuestionService implements IQestionService {
     const findQuestion = await this.questionRepository.findBy({ rank });
     const a = findQuestion.filter((value) => value.rank === rank);
     if (a.length === 0) {
-      throw new AppError(
-        "Question ID is not found!",
-        "INVALID_QUESTION_ID",
-        404
-      );
+      throw new AppError("Question ID is not found!", "NOT_FOUND", 404);
     }
     return await this.questionRepository.delete({ rank: rank });
   }

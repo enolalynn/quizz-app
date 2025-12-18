@@ -44,20 +44,6 @@ export class QuestionController implements IQuestionController {
 
   createQuestion = async (req: Request, res: Response) => {
     const payload: QuestionPayload = req.body;
-    console.log(payload);
-    if (
-      !payload.correctAnswer ||
-      !payload.questionType ||
-      !payload.rank ||
-      !payload.score ||
-      !payload.title
-    ) {
-      throw new AppError(
-        "Please, fully provide required field ",
-        "ERROR_ONE",
-        409
-      );
-    }
 
     const question = await this.questionService.createQuestion(payload);
     return res.status(200).json({

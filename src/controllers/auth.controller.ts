@@ -154,11 +154,7 @@ export class AuthController implements IAuthController {
     const adminExist = await this.authService.findAdminByEmail(req.body.email);
     console.log(req.body);
     if (adminExist) {
-      throw new AppError(
-        "email already exist!",
-        "ADMIN_REGISTER_DUPLICATE",
-        400
-      );
+      throw new AppError("email already exist!", "DUPLICATE", 400);
     }
 
     const admin = await this.authService.adminRegister(req.body);
