@@ -1,6 +1,7 @@
 import { DeleteResult, InsertResult, Repository, UpdateResult } from "typeorm";
 import { Question } from "../model/question";
 import { AppError } from "../error-codes/app.error";
+import { checkQAType } from "../utils/check-q&a-type";
 
 export enum QuestionType {
   BOOLEAN = "boolean",
@@ -44,43 +45,8 @@ export class QuestionService implements IQestionService {
     if (find) {
       throw new AppError("Rank no. already exists! ", "DUPLICATE", 409);
     }
+    checkQAType(payload.questionType, payload.correctAnswer);
 
-    switch (payload.questionType) {
-      case "boolean":
-        if (typeof payload.correctAnswer !== typeof true) {
-          throw new AppError(
-            "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "choices":
-        if (
-          !Array.isArray(payload.correctAnswer) ||
-          !payload.correctAnswer.every(
-            (ans) => typeof ans === "string" || typeof ans === "number"
-          )
-        ) {
-          throw new AppError(
-            "Answer must be an array for CHOICES type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "blank":
-        if (typeof payload.correctAnswer !== "string") {
-          throw new AppError(
-            "Answer must be a string for BLANK type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      default:
-        throw new AppError("Invalid answer type", "ERROR_ONE", 400);
-    }
     const question = this.questionRepository.create(payload);
 
     return await this.questionRepository.save(question);
@@ -103,87 +69,17 @@ export class QuestionService implements IQestionService {
           404
         );
       } else {
-        switch (payload.questionType) {
-          case "boolean":
-            if (typeof payload.correctAnswer !== typeof true) {
-              throw new AppError(
-                "Answer must be a boolean for BOOLEAN type",
-                "UNMATCH",
-                400
-              );
-            }
-            break;
-          case "choices":
-            if (
-              !Array.isArray(payload.correctAnswer) ||
-              !payload.correctAnswer.every(
-                (ans) => typeof ans === "string" || typeof ans === "number"
-              )
-            ) {
-              throw new AppError(
-                "Answer must be an array for CHOICES type",
-                "UNMATCH",
-                400
-              );
-            }
-            break;
-          case "blank":
-            if (typeof payload.correctAnswer !== "string") {
-              throw new AppError(
-                "Answer must be a string for BLANK type",
-                "UNMATCH",
-                400
-              );
-            }
-            break;
-          default:
-            throw new AppError("Invalid answer type", "ERROR_ONE", 400);
-        }
+        checkQAType(payload.questionType, payload.correctAnswer);
       }
     }
+
     const correctAnswer =
       payload.correctAnswer !== undefined
         ? payload.correctAnswer
         : updated.correctAnswer;
 
     const finalQuestionType = payload.questionType ?? updated.questionType;
-
-    switch (finalQuestionType) {
-      case "boolean":
-        if (typeof correctAnswer !== typeof true) {
-          throw new AppError(
-            "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "choices":
-        if (
-          !Array.isArray(correctAnswer) ||
-          !correctAnswer.every(
-            (ans) => typeof ans === "string" || typeof ans === "number"
-          )
-        ) {
-          throw new AppError(
-            "Answer must be an array for CHOICES type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "blank":
-        if (typeof correctAnswer !== "string") {
-          throw new AppError(
-            "Answer must be a string for BLANK type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      default:
-        throw new AppError("Invalid answer type", "ERROR_ONE", 400);
-    }
+    checkQAType(finalQuestionType, correctAnswer);
 
     updated.title = payload.title || updated.title;
     updated.questionType = payload.questionType || updated.questionType;

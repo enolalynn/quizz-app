@@ -40,7 +40,7 @@ authRouter.get(
 authRouter.post("/question", questionController.createQuestion);
 authRouter.get("/questions", questionController.getAllQuestions);
 authRouter.get("/question/:id", questionController.getQuestionsById);
-authRouter.put("/edit-question/:id", questionController.updateQuestion);
+authRouter.put("/edit-question-byrank/:id", questionController.updateQuestion);
 authRouter.delete("/question/:id", questionController.deleteQuestion);
 
 //ANSWER

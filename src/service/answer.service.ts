@@ -3,6 +3,7 @@ import { Answer, answerType } from "../model/answer";
 import { CorrectAnswer, QuestionService } from "./question.service";
 import { Question } from "../model/question";
 import { AppError } from "../error-codes/app.error";
+import { checkQAType } from "../utils/check-q&a-type";
 
 export interface AnswerPayload {
   answerType: answerType;
@@ -68,42 +69,9 @@ export class AnswerService extends QuestionService implements IAnswerService {
         404
       );
     }
-    switch (payload.answerType) {
-      case "boolean":
-        if (typeof payload.answer !== typeof true) {
-          throw new AppError(
-            "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "choices":
-        if (
-          !Array.isArray(payload.answer) ||
-          !payload.answer.every(
-            (ans) => typeof ans === "string" || typeof ans === "number"
-          )
-        ) {
-          throw new AppError(
-            "Answer must be an array for CHOICES type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "blank":
-        if (typeof payload.answer !== "string") {
-          throw new AppError(
-            "Answer must be a string for BLANK type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      default:
-        throw new AppError("Invalid answer type", "ERROR_ONE", 400);
-    }
+
+    checkQAType(payload.answerType, payload.answer);
+
     let score = 0;
     let isCorrect = false;
 
@@ -226,7 +194,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
   }
 
   async updateAnswer(userId: number, ansId: number, payload: AnswerPayload) {
-    //if user want to change existing question  => need answerType in payload
+    //for some condition => if user want to change existing question  => need answerType in payload
     //else only want to update existing answer => answerType would be optional
 
     const check = await this.answerRepository.findOne({
@@ -243,8 +211,6 @@ export class AnswerService extends QuestionService implements IAnswerService {
         404
       );
     }
-    console.log("q id : ", payload.questionId);
-    console.log(payload.answerType);
 
     let targetQuestion = check.question;
 
@@ -273,43 +239,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
     }
 
     const answerType = payload.answerType || check.answerType;
-
-    switch (answerType) {
-      case "boolean":
-        if (typeof payload.answer !== typeof true) {
-          throw new AppError(
-            "Answer must be a boolean for BOOLEAN type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "choices":
-        if (
-          !Array.isArray(payload.answer) ||
-          !payload.answer.every(
-            (ans) => typeof ans === "string" || typeof ans === "number"
-          )
-        ) {
-          throw new AppError(
-            "Answer must be an array for CHOICES type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      case "blank":
-        if (typeof payload.answer !== "string") {
-          throw new AppError(
-            "Answer must be a string for BLANK type",
-            "UNMATCH",
-            400
-          );
-        }
-        break;
-      default:
-        throw new AppError("Invalid", "ERROR_ONE", 400);
-    }
+    checkQAType(answerType, payload.answer);
 
     let score = 0;
     let isCorrect = false;
@@ -332,6 +262,7 @@ export class AnswerService extends QuestionService implements IAnswerService {
         score = 0;
       }
     }
+
     if (targetQuestion.correctAnswer === payload.answer) {
       score = targetQuestion.score;
       isCorrect = true;
@@ -360,10 +291,12 @@ export class AnswerService extends QuestionService implements IAnswerService {
     if (a.length === 0) {
       throw new AppError("Question ID is not found!", "NOT_FOUND", 404);
     }
+
     const deleteAnswer = await this.answerRepository.delete({
       user: { id: userId },
       id: ansId,
     });
+
     return deleteAnswer;
   }
 }
